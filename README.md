@@ -1,5 +1,7 @@
 # actions/configure-pages
 
+An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.
+
 Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/actions/configure-pages](https://github.com/actions/configure-pages).
 
 ## Versions
