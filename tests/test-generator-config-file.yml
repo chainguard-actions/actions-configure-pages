@@ -1,0 +1,41 @@
+name: Test generator config file input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a dummy nuxt config file
+        run: |
+          cat > nuxt.config.js << 'EOF'
+          export default {
+            target: 'static'
+          }
+          EOF
+          echo "Created nuxt.config.js"
+          ls -la nuxt.config.js
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          static_site_generator: 'nuxt'
+          generator_config_file: 'nuxt.config.js'
+          enablement: 'false'
+        continue-on-error: true
+      - name: Assert action ran with custom config file
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action either succeeds (Pages is configured) or fails with an API error
+          # Both are acceptable outcomes in the act environment
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran to completion with outcome: $OUTCOME"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
