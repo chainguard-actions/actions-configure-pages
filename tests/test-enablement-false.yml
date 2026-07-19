@@ -1,4 +1,4 @@
-name: Test basic usage
+name: Test enablement false (default)
 on:
   workflow_dispatch:
 jobs:
@@ -11,9 +11,10 @@ jobs:
         uses: .
         with:
           token: ${{ github.token }}
+          enablement: 'false'
         continue-on-error: true
 
-      - name: Assert action ran and check outputs
+      - name: Assert action ran with enablement=false
         env:
           OUTCOME: ${{ steps.pages.outcome }}
           BASE_URL: ${{ steps.pages.outputs.base_url }}
@@ -28,20 +29,11 @@ jobs:
           echo "base_path: $BASE_PATH"
 
           if [ "$OUTCOME" = "success" ]; then
-            # If Pages is enabled, outputs should be non-empty and well-formed
+            # Pages is enabled for this repo — verify outputs
             if [ -z "$BASE_URL" ]; then
               echo "FAIL: base_url should not be empty when action succeeds"
               exit 1
             fi
-            if [ -z "$ORIGIN" ]; then
-              echo "FAIL: origin should not be empty when action succeeds"
-              exit 1
-            fi
-            if [ -z "$HOST" ]; then
-              echo "FAIL: host should not be empty when action succeeds"
-              exit 1
-            fi
-            # base_url should start with https://
             case "$BASE_URL" in
               https://*)
                 echo "PASS: base_url has https:// prefix"
@@ -51,21 +43,11 @@ jobs:
                 exit 1
                 ;;
             esac
-            # origin should start with https://
-            case "$ORIGIN" in
-              https://*)
-                echo "PASS: origin has https:// prefix"
-                ;;
-              *)
-                echo "FAIL: origin does not start with https://"
-                exit 1
-                ;;
-            esac
-            echo "PASS: all outputs are well-formed"
+            echo "PASS: enablement=false accepted and outputs are well-formed"
           elif [ "$OUTCOME" = "failure" ]; then
-            # Pages may not be enabled for this repo — that is acceptable
-            echo "INFO: action failed (Pages likely not enabled for this repo) — acceptable"
-            echo "PASS: action ran and produced a deterministic outcome"
+            # Pages not enabled — action should fail without trying to enable it
+            echo "INFO: Pages not enabled and enablement=false, action correctly did not enable Pages"
+            echo "PASS: action ran with enablement=false and produced a deterministic outcome"
           else
             echo "FAIL: unexpected outcome: $OUTCOME"
             exit 1

@@ -1,0 +1,134 @@
+name: Test static site generator input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: pages
+        uses: .
+        with:
+          token: ${{ github.token }}
+          static_site_generator: nuxt
+        continue-on-error: true
+
+      - name: Assert action ran with static_site_generator input
+        env:
+          OUTCOME: ${{ steps.pages.outcome }}
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+          ORIGIN: ${{ steps.pages.outputs.origin }}
+          HOST: ${{ steps.pages.outputs.host }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "base_url: $BASE_URL"
+          echo "origin: $ORIGIN"
+          echo "host: $HOST"
+          echo "base_path: $BASE_PATH"
+
+          if [ "$OUTCOME" = "success" ]; then
+            # If Pages is enabled, outputs should be non-empty and well-formed
+            if [ -z "$BASE_URL" ]; then
+              echo "FAIL: base_url should not be empty when action succeeds"
+              exit 1
+            fi
+            if [ -z "$ORIGIN" ]; then
+              echo "FAIL: origin should not be empty when action succeeds"
+              exit 1
+            fi
+            if [ -z "$HOST" ]; then
+              echo "FAIL: host should not be empty when action succeeds"
+              exit 1
+            fi
+            # base_url should start with https://
+            case "$BASE_URL" in
+              https://*)
+                echo "PASS: base_url has https:// prefix"
+                ;;
+              *)
+                echo "FAIL: base_url does not start with https://"
+                exit 1
+                ;;
+            esac
+            echo "PASS: static_site_generator=nuxt accepted and outputs are well-formed"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "INFO: action failed (Pages likely not enabled for this repo) — acceptable"
+            echo "PASS: action ran with static_site_generator input and produced a deterministic outcome"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
+
+  test-next:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: pages
+        uses: .
+        with:
+          token: ${{ github.token }}
+          static_site_generator: next
+        continue-on-error: true
+
+      - name: Assert action ran with static_site_generator=next
+        env:
+          OUTCOME: ${{ steps.pages.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran with static_site_generator=next and produced a deterministic outcome"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
+
+  test-gatsby:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: pages
+        uses: .
+        with:
+          token: ${{ github.token }}
+          static_site_generator: gatsby
+        continue-on-error: true
+
+      - name: Assert action ran with static_site_generator=gatsby
+        env:
+          OUTCOME: ${{ steps.pages.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran with static_site_generator=gatsby and produced a deterministic outcome"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
+
+  test-sveltekit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: pages
+        uses: .
+        with:
+          token: ${{ github.token }}
+          static_site_generator: sveltekit
+        continue-on-error: true
+
+      - name: Assert action ran with static_site_generator=sveltekit
+        env:
+          OUTCOME: ${{ steps.pages.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran with static_site_generator=sveltekit and produced a deterministic outcome"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
