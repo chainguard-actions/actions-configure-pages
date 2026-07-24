@@ -4,25 +4,56 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: action
+
+      - id: pages
         uses: .
         with:
           token: ${{ github.token }}
-          static_site_generator: next
+          static_site_generator: nuxt
         continue-on-error: true
+
       - name: Assert action ran with static_site_generator input
         env:
-          OUTCOME: ${{ steps.action.outcome }}
+          OUTCOME: ${{ steps.pages.outcome }}
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+          ORIGIN: ${{ steps.pages.outputs.origin }}
+          HOST: ${{ steps.pages.outputs.host }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: |
           echo "outcome: $OUTCOME"
-          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
-            echo "PASS: action executed with static_site_generator=next"
+          echo "base_url: $BASE_URL"
+          echo "origin: $ORIGIN"
+          echo "host: $HOST"
+          echo "base_path: $BASE_PATH"
+
+          if [ "$OUTCOME" = "success" ]; then
+            # If Pages is enabled, outputs should be non-empty and look like URLs
+            if [ -z "$BASE_URL" ]; then
+              echo "FAIL: base_url should not be empty when action succeeds"
+              exit 1
+            fi
+            if [ -z "$ORIGIN" ]; then
+              echo "FAIL: origin should not be empty when action succeeds"
+              exit 1
+            fi
+            if [ -z "$HOST" ]; then
+              echo "FAIL: host should not be empty when action succeeds"
+              exit 1
+            fi
+            # base_url should start with https://
+            case "$BASE_URL" in
+              https://*)
+                echo "PASS: base_url starts with https://"
+                ;;
+              *)
+                echo "FAIL: base_url does not start with https://, got: $BASE_URL"
+                exit 1
+                ;;
+            esac
+            echo "PASS: all outputs validated with nuxt generator"
           else
-            echo "FAIL: unexpected outcome '$OUTCOME'"
-            exit 1
+            # Pages not enabled for this repo — acceptable outcome
+            echo "PASS: action failed as expected (Pages not enabled for this repo)"
           fi

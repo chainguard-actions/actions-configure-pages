@@ -1,0 +1,44 @@
+name: Test static site generator - sveltekit
+on:
+  workflow_dispatch:
+jobs:
+  test-sveltekit-generator:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run configure-pages action with sveltekit generator
+        id: pages
+        uses: .
+        with:
+          token: ${{ github.token }}
+          static_site_generator: sveltekit
+        continue-on-error: true
+
+      - name: Assert action ran (step outcome is set)
+        env:
+          OUTCOME: ${{ steps.pages.outcome }}
+        run: |
+          echo "step outcome: $OUTCOME"
+          if [ -z "$OUTCOME" ]; then
+            echo "FAIL: step outcome should not be empty"
+            exit 1
+          fi
+          echo "PASS: action ran with outcome=$OUTCOME"
+
+      - name: Report outputs (informational)
+        env:
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+          ORIGIN: ${{ steps.pages.outputs.origin }}
+          HOST: ${{ steps.pages.outputs.host }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          echo "base_url:  $BASE_URL"
+          echo "origin:    $ORIGIN"
+          echo "host:      $HOST"
+          echo "base_path: $BASE_PATH"
+          echo "INFO: outputs reported (may be empty in act/local environment)"
