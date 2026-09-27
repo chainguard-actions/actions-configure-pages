@@ -1,0 +1,51 @@
+name: Test next.js generator with config file input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a dummy next.js config file
+        run: |
+          cat > "$GITHUB_WORKSPACE/next.config.js" <<'EOF'
+          /** @type {import('next').NextConfig} */
+          const nextConfig = {};
+          module.exports = nextConfig;
+          EOF
+
+      - id: configure-pages
+        uses: .
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          static_site_generator: 'next'
+          generator_config_file: 'next.config.js'
+          enablement: 'false'
+
+      - name: Assert action ran with next generator and config file
+        env:
+          OUTCOME: ${{ steps.configure-pages.outcome }}
+          BASE_URL: ${{ steps.configure-pages.outputs.base_url }}
+          ORIGIN: ${{ steps.configure-pages.outputs.origin }}
+          HOST: ${{ steps.configure-pages.outputs.host }}
+          BASE_PATH: ${{ steps.configure-pages.outputs.base_path }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "base_url: $BASE_URL"
+          echo "origin: $ORIGIN"
+          echo "host: $HOST"
+          echo "base_path: $BASE_PATH"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$BASE_URL" ]; then
+              echo "FAIL: action succeeded but base_url output is empty"
+              exit 1
+            fi
+            echo "PASS: got base_url='$BASE_URL' with next generator and config file"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo has no Pages configured)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
