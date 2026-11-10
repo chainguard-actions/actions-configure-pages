@@ -4,8 +4,13 @@
   "version": "v4.0.0",
   "commit_sha": "1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d",
   "url": "https://github.com/actions/configure-pages",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/actions/configure-pages/v4.0.0/sha256-2ab15acb7400b73d7b3bd0718f7d28cdcbe9117ce9185e107bc9cfa1b0f40597.tar.gz",
+    "sha256": "2ab15acb7400b73d7b3bd0718f7d28cdcbe9117ce9185e107bc9cfa1b0f40597",
+    "size_bytes": 381267
+  }
 }
